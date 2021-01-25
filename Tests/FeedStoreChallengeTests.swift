@@ -38,9 +38,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 	
 	func test_retrieve_hasNoSideEffectsOnNonEmptyCache() {
-		//		let sut = makeSUT()
-		//
-		//		assertThatRetrieveHasNoSideEffectsOnNonEmptyCache(on: sut)
+//				let sut = makeSUT()
+//
+//				assertThatRetrieveHasNoSideEffectsOnNonEmptyCache(on: sut)
 	}
 	
 	func test_insert_deliversNoErrorOnEmptyCache() {
@@ -92,9 +92,29 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 	
 	// - MARK: Helpers
+	final class TestCoreDataStack: CoreDataStack {
+
+		convenience init() {
+			self.init(modelName: "Model", bundle: Bundle(for: CoreDataFeedStore.self))
+		}
+
+		override init(modelName: String, bundle: Bundle) {
+			super.init(modelName: modelName, bundle: bundle)
+
+			let persistentStoreDescription = NSPersistentStoreDescription()
+			persistentStoreDescription.type = NSInMemoryStoreType
+
+			let container = NSPersistentContainer.loadModel(name: modelName, in: bundle, descriptions: [persistentStoreDescription])
+
+			self.storeContainer = container
+		}
+	}
 	
 	private func makeSUT() -> FeedStore {
-		CoreDataFeedStore()
+		let testCoreDataStack = TestCoreDataStack()
+		let feedStore = CoreDataFeedStore(managedObjectContext: testCoreDataStack.context, coreDataStack: testCoreDataStack)
+		
+		return feedStore
 	}
 	
 }
