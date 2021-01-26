@@ -25,7 +25,7 @@ public final class CoreDataFeedStore: FeedStore {
 		let fetchRequest: NSFetchRequest<FeedCache> = FeedCache.fetchRequest()
 		
 		do {
-			guard let result = try coreDataStack.context.fetch(fetchRequest).first else { return completion(NSError(domain: "", code: .zero)) }
+			guard let result = try coreDataStack.context.fetch(fetchRequest).first else { return completion(nil) }
 			context.delete(result)
 			
 			completion(nil)
