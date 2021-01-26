@@ -12,37 +12,55 @@ import CoreData
 public final class CoreDataFeedStore: FeedStore {
 	
 	// MARK: Properties
-	let managedObjectContext: NSManagedObjectContext
+	let context: NSManagedObjectContext
 	let coreDataStack: CoreDataStack
 
 	// MARK: Initializers
 	public init(managedObjectContext: NSManagedObjectContext, coreDataStack: CoreDataStack) {
-		self.managedObjectContext = managedObjectContext
+		self.context = managedObjectContext
 		self.coreDataStack = coreDataStack
 	}
 	
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
+		let fetchRequest: NSFetchRequest<FeedCache> = FeedCache.fetchRequest()
+		
+		do {
+			guard let result = try coreDataStack.context.fetch(fetchRequest).first else { return completion(NSError(domain: "", code: .zero)) }
+			context.delete(result)
+			
+			completion(nil)
+			
+		} catch {
+			return completion(error)
+		}
+		
+		coreDataStack.saveContext()
 	}
 	
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		
-		let feedCache = FeedCache(context: managedObjectContext)
-		
-		let feedImages: [FeedImage] = feed.map {
-			let feedImage = FeedImage(context: managedObjectContext)
-			feedImage.id = $0.id
-			feedImage.location = $0.location
-			feedImage.imageDescription = $0.description
-			feedImage.url = $0.url
+		deleteCachedFeed { [weak self] error in
+			guard let self = self else { return }
 			
-			return feedImage
+			let feedCache = FeedCache(context: self.context)
+			
+			let feedImages: [FeedImage] = feed.map {
+				let feedImage = FeedImage(context: self.context)
+			 feedImage.id = $0.id
+			 feedImage.location = $0.location
+			 feedImage.imageDescription = $0.description
+			 feedImage.url = $0.url
+			 
+			 return feedImage
+		 }
+		 
+		 feedCache.feedImages = NSOrderedSet(array: feedImages)
+		 feedCache.timestamp = timestamp
+
+			self.coreDataStack.saveContext()
+		 completion(nil)
 		}
 		
-		feedCache.feedImages = NSOrderedSet(array: feedImages)
-		feedCache.timestamp = timestamp
-
-		coreDataStack.saveContext()
-		completion(nil)
 	}
 	
 	public func retrieve(completion: @escaping RetrievalCompletion) {
