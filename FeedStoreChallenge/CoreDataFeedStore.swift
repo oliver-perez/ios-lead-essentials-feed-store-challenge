@@ -75,7 +75,7 @@ public final class CoreDataFeedStore: FeedStore {
 			
 			guard let feedResult = localFeedResult,
 						let timestamp = localFeedResult?.timestamp
-			else { return completion(.empty) }
+			else { return completion(.failure(NSError(domain: "", code: .zero))) }
 			
 			let feed = feedResult.feed?.array as? [FeedImage] ?? []
 			
