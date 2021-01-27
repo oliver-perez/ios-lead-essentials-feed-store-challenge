@@ -108,7 +108,7 @@ public extension NSPersistentContainer {
 		
 		// MARK: NSPersistentContainer extension
 		
-	static func loadModel(name: String, in bundle: Bundle, descriptions:  [NSPersistentStoreDescription] = []) -> NSPersistentContainer {
+	static func loadModel(name: String, in bundle: Bundle, descriptions: [NSPersistentStoreDescription] = [NSPersistentStoreDescription()]) -> NSPersistentContainer {
 		guard let mom = NSManagedObjectModel.mergedModel(from: [bundle]) else {
 			fatalError("Not able to find data model")
 		}
