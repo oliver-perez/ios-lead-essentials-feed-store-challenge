@@ -79,11 +79,16 @@ class FeedStoreIntegrationTests: XCTestCase {
 	}
 	
 	private func setupEmptyStoreState() {
-		
+		deleteStoreArtifacts()
 	}
 	
 	private func undoStoreSideEffects() {
-		
+		deleteStoreArtifacts()
+	}
+	
+	private func deleteStoreArtifacts() {
+		let sut = makeSUT()
+		sut.deleteCachedFeed { _ in }
 	}
 	
 }
