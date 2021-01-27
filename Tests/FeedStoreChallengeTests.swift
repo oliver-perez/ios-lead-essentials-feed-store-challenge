@@ -112,7 +112,7 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	
 	private func makeSUT() -> FeedStore {
 		let testCoreDataStack = TestCoreDataStack()
-		let feedStore = CoreDataFeedStore(managedObjectContext: testCoreDataStack.context, coreDataStack: testCoreDataStack)
+		let feedStore = CoreDataFeedStore(coreDataStack: testCoreDataStack)
 		
 		return feedStore
 	}

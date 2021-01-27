@@ -12,13 +12,14 @@ import CoreData
 public final class CoreDataFeedStore: FeedStore {
 	
 	// MARK: Properties
-	let context: NSManagedObjectContext
-	let coreDataStack: CoreDataStack
+	lazy var context: NSManagedObjectContext = {
+		Self.coreDataStack.context
+	}()
+	private static var coreDataStack: CoreDataStack = CoreDataStack(modelName: "Model")
 
 	// MARK: Initializers
-	public init(managedObjectContext: NSManagedObjectContext, coreDataStack: CoreDataStack) {
-		self.context = managedObjectContext
-		self.coreDataStack = coreDataStack
+	public init(coreDataStack: CoreDataStack) {
+		Self.coreDataStack = coreDataStack
 	}
 	
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
@@ -26,7 +27,7 @@ public final class CoreDataFeedStore: FeedStore {
 			let fetchRequest: NSFetchRequest<FeedCache> = FeedCache.fetchRequest()
 
 			do {
-				guard let result = try self.coreDataStack.context.fetch(fetchRequest).first else { return completion(nil) }
+				guard let result = try Self.coreDataStack.context.fetch(fetchRequest).first else { return completion(nil) }
 				context.delete(result)
 				
 				completion(nil)
@@ -35,7 +36,7 @@ public final class CoreDataFeedStore: FeedStore {
 				return completion(error)
 			}
 			
-			self.coreDataStack.saveContext()
+			Self.coreDataStack.saveContext()
 		}
 	}
 	
@@ -68,7 +69,11 @@ public final class CoreDataFeedStore: FeedStore {
 			feedCache.feedImages = NSOrderedSet(array: feedImages)
 			feedCache.timestamp = timestamp
 			
-			self.coreDataStack.saveContext()
+			do {
+				try self.context.save()
+			} catch {
+				completion(error)
+			}
 			completion(nil)
 		}
 		
