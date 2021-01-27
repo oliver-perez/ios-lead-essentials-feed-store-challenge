@@ -22,7 +22,7 @@ open class CoreDataStack {
 		NSPersistentContainer.loadModel(name: modelName, in: bundle)
 	}()
 
-	public init(modelName: String, bundle: Bundle) {
+	public init(modelName: String, bundle: Bundle = .main) {
 		self.modelName = modelName
 		self.bundle = bundle
 	}
