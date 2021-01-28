@@ -52,16 +52,7 @@ public final class CoreDataFeedStore: FeedStore {
 			}
 			
 			let feedCache = FeedCache(context: self.context)
-			
-			let feedImages: [FeedImage] = feed.map {
-				let feedImage = FeedImage(context: self.context)
-				feedImage.id = $0.id
-				feedImage.location = $0.location
-				feedImage.imageDescription = $0.description
-				feedImage.url = $0.url
-				
-				return feedImage
-			}
+			let feedImages = transformToManagedRepresentation(feed)
 			
 			feedCache.feedImages = NSOrderedSet(array: feedImages)
 			feedCache.timestamp = timestamp
@@ -101,6 +92,18 @@ public final class CoreDataFeedStore: FeedStore {
 			return completion(.found(feed: retrievedImages, timestamp: timestamp))
 		} catch {
 			return completion(.failure(error))
+		}
+	}
+	
+	private func transformToManagedRepresentation(_ feed: [LocalFeedImage]) -> [FeedImage] {
+		feed.map {
+			let feedImage = FeedImage(context: self.context)
+			feedImage.id = $0.id
+			feedImage.location = $0.location
+			feedImage.imageDescription = $0.description
+			feedImage.url = $0.url
+			
+			return feedImage
 		}
 	}
 	
