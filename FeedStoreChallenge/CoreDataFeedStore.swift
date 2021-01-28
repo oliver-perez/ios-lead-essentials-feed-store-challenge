@@ -16,7 +16,7 @@ public final class CoreDataFeedStore: FeedStore {
 		Self.coreDataStack.context
 	}()
 	private static var coreDataStack: CoreDataStack = CoreDataStack(modelName: "FeedStoreModel")
-
+	
 	// MARK: Initializers
 	public init(coreDataStack: CoreDataStack) {
 		Self.coreDataStack = coreDataStack
@@ -24,11 +24,10 @@ public final class CoreDataFeedStore: FeedStore {
 	
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
 		context.perform { [unowned context] in
-			let fetchRequest: NSFetchRequest<FeedCache> = FeedCache.fetchRequest()
-
+			
 			do {
-				guard let result = try Self.coreDataStack.context.fetch(fetchRequest).first else { return completion(nil) }
-				context.delete(result)
+				guard let cache = try self.fetchCache() else { return completion(nil) }
+				context.delete(cache)
 				
 				completion(nil)
 				
@@ -41,15 +40,13 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 	
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		context.perform {
+		context.perform { [unowned self] in
 			
 			do {
-				let fetchRequest: NSFetchRequest<FeedCache> = FeedCache.fetchRequest()
-
-				if let result = try self.context.fetch(fetchRequest).first {
-					self.context.delete(result)
+				if let cache = try self.fetchCache() {
+					self.context.delete(cache)
 				}
-								
+				
 			} catch {
 				return completion(error)
 			}
@@ -80,39 +77,46 @@ public final class CoreDataFeedStore: FeedStore {
 	}
 	
 	public func retrieve(completion: @escaping RetrievalCompletion) {
-		let fetchRequest: NSFetchRequest<FeedCache> = FeedCache.fetchRequest()
-			do {
-				let result = try context.fetch(fetchRequest)
-				
-				let localFeedResult = result.first.map {
-					(feed: $0.feedImages, timestamp: $0.timestamp)
-				}
-				
-				guard let feedResult = localFeedResult,
-							let timestamp = localFeedResult?.timestamp
-				else { return completion(.empty) }
-				
-				let feed = feedResult.feed?.array as? [FeedImage] ?? []
-				
-				let retrievedImages = feed.map {
-					LocalFeedImage(id: $0.id!,
-												 description: $0.imageDescription,
-												 location: $0.location,
-												 url: $0.url!)
-				}
-				
-				return completion(.found(feed: retrievedImages, timestamp: timestamp))
-			} catch {
-				return completion(.failure(error))
+		do {
+			let cache = try fetchCache()
+			
+			let localFeedResult = cache.map {
+				(feed: $0.feedImages, timestamp: $0.timestamp)
 			}
+			
+			guard let feedResult = localFeedResult,
+						let timestamp = localFeedResult?.timestamp
+			else { return completion(.empty) }
+			
+			let feed = feedResult.feed?.array as? [FeedImage] ?? []
+			
+			let retrievedImages: [LocalFeedImage] = feed.compactMap {
+				guard let id = $0.id, let url = $0.url else { return nil }
+				return LocalFeedImage(id: id,
+															description: $0.imageDescription,
+															location: $0.location,
+															url: url)
+			}
+			
+			return completion(.found(feed: retrievedImages, timestamp: timestamp))
+		} catch {
+			return completion(.failure(error))
+		}
+	}
+	
+	private func fetchCache() throws -> FeedCache? {
+		let fetchRequest: NSFetchRequest<FeedCache> = FeedCache.fetchRequest()
+		let result = try Self.coreDataStack.context.fetch(fetchRequest)
+		
+		return result.first
 	}
 	
 }
 
 public extension NSPersistentContainer {
-		
-		// MARK: NSPersistentContainer extension
-		
+	
+	// MARK: NSPersistentContainer extension
+	
 	static func loadModel(name: String, in bundle: Bundle, descriptions: [NSPersistentStoreDescription] = [NSPersistentStoreDescription()]) -> NSPersistentContainer {
 		guard let mom = NSManagedObjectModel.mergedModel(from: [bundle]) else {
 			fatalError("Not able to find data model")
