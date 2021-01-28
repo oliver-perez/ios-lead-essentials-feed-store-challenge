@@ -15,7 +15,7 @@ public final class CoreDataFeedStore: FeedStore {
 	lazy var context: NSManagedObjectContext = {
 		Self.coreDataStack.context
 	}()
-	private static var coreDataStack: CoreDataStack = CoreDataStack(modelName: "Model")
+	private static var coreDataStack: CoreDataStack = CoreDataStack(modelName: "FeedStoreModel")
 
 	// MARK: Initializers
 	public init(coreDataStack: CoreDataStack) {

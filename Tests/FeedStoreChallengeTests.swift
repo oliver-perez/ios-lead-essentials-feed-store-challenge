@@ -95,7 +95,7 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	final class TestCoreDataStack: CoreDataStack {
 
 		convenience init() {
-			self.init(modelName: "Model", bundle: Bundle(for: CoreDataFeedStore.self))
+			self.init(modelName: "FeedStoreModel", bundle: Bundle(for: CoreDataFeedStore.self))
 		}
 
 		override init(modelName: String, bundle: Bundle) {

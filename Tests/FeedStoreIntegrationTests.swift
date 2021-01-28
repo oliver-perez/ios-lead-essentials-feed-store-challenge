@@ -72,7 +72,7 @@ class FeedStoreIntegrationTests: XCTestCase {
 	// - MARK: Helpers
 	
 	private func makeSUT() -> FeedStore {
-		let coreDataStack = CoreDataStack(modelName: "Model", bundle: Bundle(for: CoreDataFeedStore.self))
+		let coreDataStack = CoreDataStack(modelName: "FeedStoreModel", bundle: Bundle(for: CoreDataFeedStore.self))
 		let feedStore = CoreDataFeedStore(coreDataStack: coreDataStack)
 		
 		return feedStore
